@@ -1,100 +1,104 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState, useContext, createContext } from "react";
+import "./App.css";
 
 let productData = [
   {
     id: 1,
-    name: 'Rice Cooker',
+    name: "Rice Cooker",
     price: {
       purchasePrice: 999,
-      sellPrice: 1299
+      sellPrice: 1299,
     },
     quantity: 4,
-    categoryId: 'Appliances',
-    locations: [
-      'Inventory Room 1'
-    ]
+    categoryId: "Appliances",
+    locations: ["Inventory Room 1"],
   },
   {
     id: 2,
-    name: 'Flour',
+    name: "Flour",
     price: {
       purchasePrice: 49,
-      sellPrice: 67
+      sellPrice: 67,
     },
     quantity: 10,
-    categoryId: 'Raw Material',
-    locations: [
-      'Inventory Room 2'
-    ]
+    categoryId: "Raw Material",
+    locations: ["Inventory Room 2"],
   },
   {
     id: 3,
-    name: 'Choco Chips',
+    name: "Choco Chips",
     price: {
       purchasePrice: 89,
-      sellPrice: 110
+      sellPrice: 110,
     },
     quantity: 8,
-    categoryId: 'Food',
-    locations: [
-      'Inventory Room 3'
-    ]
+    categoryId: "Food",
+    locations: ["Inventory Room 3"],
   },
 ];
 
-function Buttons({ quantity, onIncrement, onDecrement }) {
-  const handleIncrement = () => {
-    onIncrement(quantity + 1)
-  }
-  const handleDecrement = () => {
+const ProductContext = createContext();
+const useProducts = () => useContext(ProductContext);
+
+export function ProductProvider({ children }) {
+  const [products, setProducts] = useState(productData);
+  const handleQuantityChange = (id, quantity) => {
+    setProducts(
+      products.map((product) =>
+        product.id === id ? { ...product, quantity } : product
+      )
+    );
+  };
+  const handleIncrement = (id, quantity) => {
+    quantity = quantity + 1;
+    handleQuantityChange(id, quantity);
+  };
+  const handleDecrement = (id, quantity) => {
     if(quantity === 0) {
       return;
     }
-    onDecrement(quantity - 1)
+    quantity = quantity - 1;
+    handleQuantityChange(id, quantity);
   };
+    
   return (
-    <>
-      <button onClick={handleDecrement}>-</button><button onClick={handleIncrement}>+</button>
-    </>
-  )
+    <ProductContext.Provider value={{ products, handleIncrement, handleDecrement }}>
+      {children}
+    </ProductContext.Provider>
+  );
 }
 
-function Product({ id, name, price, quantity, onIncrement, onDecrement }) {
+function Product({ id, name, price, quantity }) {
+  const { handleDecrement, handleIncrement } = useProducts();
   return (
-      <li key={id}>{name} @PHP{price.sellPrice} x{quantity} <Buttons quantity={quantity} onIncrement={quantity => onIncrement(id, quantity)} onDecrement={quantity => onDecrement(id, quantity)}/></li>
-  )
+    <li key={id}>
+      {name} - PHP{price.sellPrice} x{quantity}
+      <button onClick={() => handleDecrement(id, quantity)}>-</button>
+      <button onClick={() => handleIncrement(id, quantity)}>+</button>
+    </li>
+  );
 }
 
-function ProductList({ products = [], onIncrementItem, onDecrementItem }) {
-  if(!products.length) return <div>No product listed.</div>;
+function ProductList() {
+  const { products } = useProducts();
+  if (!products.length) return <div>No product listed.</div>;
   return (
     <div>
       <ul>
-        {
-          products.map(product => <Product key={product.id} {...product} onIncrement={onIncrementItem} onDecrement={onDecrementItem}/>)
-        }
+        {products.map((product) => (
+          <Product
+            key={product.id}
+            {...product}
+          />
+        ))}
       </ul>
     </div>
-  )
+  );
 }
 
 function App() {
-  const [products, setProducts] = useState(productData);
-  const handleQuantityChange = (id, quantity) => {
-    const newSet = products.map(prod => 
-      prod.id === id ? { ...prod, quantity } : prod
-    );
-    setProducts(newSet);
-  }
   return (
-    <div>
-      <ProductList 
-        products={products} 
-        onIncrementItem={handleQuantityChange}
-        onDecrementItem={handleQuantityChange}
-      />
-    </div>
+      <ProductList/>
   );
 }
 
