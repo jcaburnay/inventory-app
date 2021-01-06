@@ -1,71 +1,37 @@
-import React, { useState, useContext, createContext } from "react";
+import React from "react";
+import { useProducts } from './context';
+import { useInput } from './custom-hooks';
 import "./App.css";
 
-let productData = [
-  {
-    id: 1,
-    name: "Rice Cooker",
-    price: {
-      purchasePrice: 999,
-      sellPrice: 1299,
-    },
-    quantity: 4,
-    categoryId: "Appliances",
-    locations: ["Inventory Room 1"],
-  },
-  {
-    id: 2,
-    name: "Flour",
-    price: {
-      purchasePrice: 49,
-      sellPrice: 67,
-    },
-    quantity: 10,
-    categoryId: "Raw Material",
-    locations: ["Inventory Room 2"],
-  },
-  {
-    id: 3,
-    name: "Choco Chips",
-    price: {
-      purchasePrice: 89,
-      sellPrice: 110,
-    },
-    quantity: 8,
-    categoryId: "Food",
-    locations: ["Inventory Room 3"],
-  },
-];
-
-const ProductContext = createContext();
-const useProducts = () => useContext(ProductContext);
-
-export function ProductProvider({ children }) {
-  const [products, setProducts] = useState(productData);
-  const handleQuantityChange = (id, quantity) => {
-    setProducts(
-      products.map((product) =>
-        product.id === id ? { ...product, quantity } : product
-      )
-    );
-  };
-  const handleIncrement = (id, quantity) => {
-    quantity = quantity + 1;
-    handleQuantityChange(id, quantity);
-  };
-  const handleDecrement = (id, quantity) => {
-    if(quantity === 0) {
-      return;
-    }
-    quantity = quantity - 1;
-    handleQuantityChange(id, quantity);
-  };
-    
+function AddItem() {
+  const { addItem } = useProducts();
+  const [name, setName] = useInput("");
+  const [purchasePrice, setPurchasePrice] = useInput("");
+  const [sellPrice, setSellPrice] = useInput("");
+  const [quantity, setQuantity] = useInput("");
+  const [category, setCategory] = useInput("");
+  const [locations, setLocations] = useInput(""); 
+  const submit = e => {
+    e.preventDefault();
+    addItem(name.value, Number(purchasePrice.value), Number(sellPrice.value), Number(quantity.value), category.value, locations.value);
+    setName();
+    setPurchasePrice();
+    setSellPrice();
+    setQuantity();
+    setCategory();
+    setLocations();
+  }
   return (
-    <ProductContext.Provider value={{ products, handleIncrement, handleDecrement }}>
-      {children}
-    </ProductContext.Provider>
-  );
+    <form onSubmit={submit}>
+      <input {...name} type="text" placeholder="Name" required />
+      <input {...purchasePrice} type="number" placeholder="Purchase Price" min="0" required/>
+      <input {...sellPrice} type="number" placeholder="Sell Price" min="0" required/>
+      <input {...quantity} type="number" placeholder="Quantity" min="1" required/>
+      <input {...category} type="text" placeholder="Category" required/>
+      <input {...locations} type="text" placeholder="Location" required/>
+      <button>Add item</button>
+    </form>
+  )
 }
 
 function Product({ id, name, price, quantity }) {
@@ -85,7 +51,7 @@ function ProductList() {
   return (
     <div>
       <ul>
-        {products.map((product) => (
+        {products.map(product => (
           <Product
             key={product.id}
             {...product}
@@ -98,7 +64,10 @@ function ProductList() {
 
 function App() {
   return (
-      <ProductList/>
+    <>
+      <AddItem />
+      <ProductList />
+    </>
   );
 }
 

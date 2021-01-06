@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { ProductProvider } from './App'
+import { ProductProvider } from './context'
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
