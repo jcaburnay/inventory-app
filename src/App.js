@@ -1,56 +1,63 @@
 import React from "react";
-import { useProducts } from './context';
-import { useInput } from './custom-hooks';
+import { useApp } from "./context";
+import { useInput } from "./custom-hooks";
 import "./App.css";
 
 //Inventory Components
 
 function AddInventory() {
-  const { addInventory } = useProducts();
+  const { addInventory } = useApp();
   const [inventory, setInventory] = useInput("");
   const [description, setDescription] = useInput("");
 
-  const submit = e => {
+  const submit = (e) => {
     e.preventDefault();
     addInventory(inventory.value, description.value);
     setDescription();
     setInventory();
-  }
+  };
 
   return (
     <>
       <form onSubmit={submit}>
         <label>
           Inventory name:
-          <input {...inventory} type="text" placeholder="inventory name" required/>
+          <input {...inventory} type="text" required />
         </label>
-        <br />
         <label>
           Description:
-          <input {...description} type="text" placeholder="description" required/>
+          <input {...description} type="text" required />
         </label>
-        <br />
         <button>Add inventory</button>
       </form>
       <br />
     </>
-  )
+  );
 }
 
 function InventoryList() {
-  const { inventories, handleInventoryItems } = useProducts();
+  const { inventories, handleChangeInventory } = useApp();
+  if (!inventories.length) return <div>No inventory listed.</div>;
   return (
     <>
-      <div>
-        {inventories.length === 0 ? <div>No inventory listed.</div> : inventories.map(inventory => <button key={inventory.id} onClick={() => handleInventoryItems(inventory.id)}>{inventory.name}</button>)}
-      </div>
+      {inventories.map((inventory) => (
+        <button
+          key={inventory.id}
+          onClick={() => handleChangeInventory(inventory.id)}
+        >
+          {inventory.name}
+        </button>
+      ))}
+      <br />
       <hr />
     </>
-  )
+  );
 }
 
-function AddItem() {
-  const { addItem } = useProducts();
+// Product components
+
+function AddProduct() {
+  const { handleAddProduct } = useApp();
   const [name, setName] = useInput("");
   const [purchasePrice, setPurchasePrice] = useInput("");
   const [sellPrice, setSellPrice] = useInput("");
@@ -65,9 +72,15 @@ function AddItem() {
     setCategory();
   };
 
-  const submit = e => {
+  const submit = (e) => {
     e.preventDefault();
-    addItem(name.value, Number(purchasePrice.value), Number(sellPrice.value), Number(quantity.value), category.value);
+    handleAddProduct(
+      name.value,
+      Number(purchasePrice.value),
+      Number(sellPrice.value),
+      Number(quantity.value),
+      category.value
+    );
     resetInput();
   };
 
@@ -76,42 +89,36 @@ function AddItem() {
       <form onSubmit={submit}>
         <label>
           Name:
-          <input {...name} type="text" placeholder="product name" required />
+          <input {...name} type="text" required />
         </label>
-        <br />
         <label>
           Price (Purchase):
-          <input {...purchasePrice} type="number" placeholder="purchasing price" min="0" required/>
+          <input {...purchasePrice} type="number" min="0" required />
         </label>
-        <br />
         <label>
           Price (Sell):
-          <input {...sellPrice} type="number" placeholder="selling price" min="0" required/>
+          <input {...sellPrice} type="number" min="0" required />
         </label>
-        <br />
         <label>
           Quantity:
-          <input {...quantity} type="number" placeholder="quantity" min="1" required/>
+          <input {...quantity} type="number" min="1" required />
         </label>
-        <br />
         <label>
           Category:
-          <input {...category} type="text" placeholder="product category" required/>
+          <input {...category} type="text" required />
         </label>
-        <br />
         <button>Add item</button>
       </form>
       <br />
     </>
-    
-  )
+  );
 }
 
 function Product({ id, name, price, quantity }) {
-  const { handleRemove, handleDecrement, handleIncrement } = useProducts();
+  const { handleRemoveProduct, handleDecrement, handleIncrement } = useApp();
   return (
     <li key={id}>
-      <button onClick={() => handleRemove(id)}>x</button>
+      <button onClick={() => handleRemoveProduct(id)}>x</button>
       {name} - PHP{price.sellPrice} x{quantity}
       <button onClick={() => handleDecrement(id, quantity)}>-</button>
       <button onClick={() => handleIncrement(id, quantity)}>+</button>
@@ -120,31 +127,35 @@ function Product({ id, name, price, quantity }) {
 }
 
 function ProductList() {
-  const { products, setProducts } = useProducts();
-  const handleFilter = category => {
-    if(category === 'all') {
-      setProducts(products);
-    } else {
-      setProducts(products.filter(product => product.category === category));
-    }
-  };
+  const { inventories, handleCategoryFilter } = useApp();
 
-  const categories = ['all'].concat(products.map(product => product.category).filter((category, idx, arr) => arr.indexOf(category) === idx));
+  const activeInventory = inventories.filter(
+    (inventory) => inventory.isActive
+  )[0];
 
-  if (!products.length) return <div>No product listed.</div>;
+  if (!activeInventory) return <div>No active inventory</div>;
   return (
     <div>
-      <div>
-        {categories.map((category, idx) => <button key={idx} onClick={() => handleFilter(category)}>{category}</button>)}
-      </div>
-      <ul>
-        {products.map(product => (
-          <Product
-            key={product.id}
-            {...product}
-          />
-        ))}
-      </ul>
+      <p>Active Inventory: {activeInventory.name}</p>
+      {!activeInventory.products.length ? (
+        <p>No products listed.</p>
+      ) : (
+        <>
+          {activeInventory.products.map((product) => (
+            <button
+              key={product.id}
+              onClick={() => handleCategoryFilter(product.category)}
+            >
+              {product.category}
+            </button>
+          ))}
+          <ul>
+            {activeInventory.products.map((product) => (
+              <Product key={product.id} {...product} />
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
@@ -154,7 +165,7 @@ function App() {
     <>
       <AddInventory />
       <InventoryList />
-      <AddItem />
+      <AddProduct />
       <ProductList />
     </>
   );

@@ -1,15 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { ProductProvider } from './context'
+import { AppProvider } from './context'
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
-    <ProductProvider>
+    <AppProvider>
       <App />
-    </ProductProvider>
+    </AppProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
