@@ -4,80 +4,86 @@ import { v4 } from "uuid";
 // let initialInventories = [
 //   {
 //     id: v4(),
-//     name: 'Gadgets',
-//     description: 'Room storage for devices/gadgets',
+//     name: "Gadgets",
+//     description: "Room storage for devices/gadgets",
 //     isActive: false,
 //     products: [
 //       {
 //         id: v4(),
-//         name: 'Mechanical Keyboard TKL',
+//         name: "Mechanical Keyboard TKL",
 //         price: {
 //           purchasePrice: 2550,
-//           sellPrice: 2950
+//           sellPrice: 2950,
 //         },
 //         quantity: 4,
-//         category: 'Computer Accessories'
+//         category: "Computer Accessories",
+//         visibility: "visible",
 //       },
 //       {
 //         id: v4(),
-//         name: 'Mouse',
+//         name: "Mouse",
 //         price: {
 //           purchasePrice: 879,
-//           sellPrice: 999
+//           sellPrice: 999,
 //         },
 //         quantity: 7,
-//         category: 'Computer Accessories'
+//         category: "Computer Accessories",
+//         visibility: "visible",
 //       },
-//     ]
+//     ],
 //   },
 //   {
 //     id: v4(),
-//     name: 'Food Storage',
-//     description: 'Storage for foods',
+//     name: "Food Storage",
+//     description: "Storage for foods",
 //     isActive: false,
 //     products: [
 //       {
 //         id: v4(),
-//         name: 'Milo',
+//         name: "Milo",
 //         price: {
 //           purchasePrice: 89,
-//           sellPrice: 109
+//           sellPrice: 109,
 //         },
 //         quantity: 24,
-//         category: 'Drinks'
+//         category: "Drinks",
+//         visibility: "visible",
 //       },
 //       {
 //         id: v4(),
-//         name: 'Bear Brand',
+//         name: "Bear Brand",
 //         price: {
 //           purchasePrice: 76,
-//           sellPrice: 89
+//           sellPrice: 89,
 //         },
 //         quantity: 36,
-//         category: 'Drinks'
+//         category: "Drinks",
+//         visibility: "visible",
 //       },
 //       {
 //         id: v4(),
-//         name: 'Ladys Choice',
+//         name: "Ladys Choice",
 //         price: {
 //           purchasePrice: 99,
-//           sellPrice: 129
+//           sellPrice: 129,
 //         },
 //         quantity: 3,
-//         category: 'Spread'
+//         category: "Spread",
+//         visibility: "visible",
 //       },
 //       {
 //         id: v4(),
-//         name: '555 Fried Sardines',
+//         name: "555 Fried Sardines",
 //         price: {
 //           purchasePrice: 22,
-//           sellPrice: 34
+//           sellPrice: 34,
 //         },
 //         quantity: 12,
-//         category: 'Canned goods'
+//         category: "Canned goods",
+//         visibility: "visible",
 //       },
-//     ]
-//   }
+//     ],
+//   },
 // ];
 
 const AppContext = createContext();
@@ -88,6 +94,8 @@ function AppProvider({ children }) {
   const [inventories, setInventories] = useState(
     localDataInventory ? JSON.parse(localDataInventory) : []
   );
+
+  // const [inventories, setInventories] = useState(initialInventories);
 
   useEffect(() => {
     localStorage.setItem("inventories", JSON.stringify(inventories));
@@ -114,27 +122,22 @@ function AppProvider({ children }) {
   };
 
   const handleChangeInventory = (inventoryId) => {
-    const changeActiveInventory = inventories
-      .map((inventory) => {
-        if (inventory.id === inventoryId) {
-          const setActive = {
-            ...inventory,
-            isActive: true,
-          };
-          return setActive;
-        }
-        return inventory;
-      })
-      .map((inventory) => {
-        if (inventory.id !== inventoryId) {
-          const setInactive = {
-            ...inventory,
-            isActive: false,
-          };
-          return setInactive;
-        }
-        return inventory;
-      });
+    const changeActiveInventory = inventories.map((inventory) => {
+      if (inventory.id === inventoryId) {
+        const setActive = {
+          ...inventory,
+          isActive: true,
+        };
+        return setActive;
+      } else if (inventory.id !== inventoryId) {
+        const setInactive = {
+          ...inventory,
+          isActive: false,
+        };
+        return setInactive;
+      }
+      return inventory;
+    });
     setInventories(changeActiveInventory);
   };
 
@@ -174,7 +177,7 @@ function AppProvider({ children }) {
     quantity,
     category
   ) => {
-    const addNewProduct = inventories.map((inventory) => {
+    const updateProducts = inventories.map((inventory) => {
       if (inventory.isActive) {
         const modifiedInventory = {
           ...inventory,
@@ -189,6 +192,7 @@ function AppProvider({ children }) {
               },
               quantity: quantity,
               category: category,
+              visibility: "list-item",
             },
           ],
         };
@@ -196,7 +200,7 @@ function AppProvider({ children }) {
       }
       return inventory;
     });
-    setInventories(addNewProduct);
+    setInventories(updateProducts);
   };
 
   const handleRemoveProduct = (id) => {
@@ -214,19 +218,55 @@ function AppProvider({ children }) {
   };
 
   const handleCategoryFilter = (category) => {
-    // const filteredInventories = inventories.map((inventory) => {
-    //   if (inventory.isActive) {
-    //     const filteredProducts = {
-    //       ...inventory,
-    //       products: inventory.products.filter(
-    //         (product) => product.category === category
-    //       ),
-    //     };
-    //     return filteredProducts;
-    //   }
-    //   return inventory;
-    // });
-    // setInventories(filteredInventories);
+    if (category === "All") {
+      const showAllProducts = inventories.map((inventory) => {
+        if (inventory.isActive) {
+          const changeVisibility = {
+            ...inventory,
+            products: inventory.products.map((product) => {
+              if (product.visibility === "none") {
+                const setVisibility = {
+                  ...product,
+                  visibility: "list-item",
+                };
+                return setVisibility;
+              }
+              return product;
+            }),
+          };
+          return changeVisibility;
+        }
+        return inventory;
+      });
+      setInventories(showAllProducts);
+    } else {
+      const filteredProducts = inventories.map((inventory) => {
+        if (inventory.isActive) {
+          const changeVisibility = {
+            ...inventory,
+            products: inventory.products.map((product) => {
+              if (product.category !== category) {
+                const setVisibility = {
+                  ...product,
+                  visibility: "none",
+                };
+                return setVisibility;
+              } else if (product.category === category) {
+                const setVisibility = {
+                  ...product,
+                  visibility: "list-item",
+                };
+                return setVisibility;
+              }
+              return product;
+            }),
+          };
+          return changeVisibility;
+        }
+        return inventory;
+      });
+      setInventories(filteredProducts);
+    }
   };
 
   return (

@@ -58,18 +58,18 @@ function InventoryList() {
 
 function AddProduct() {
   const { handleAddProduct } = useApp();
-  const [name, setName] = useInput("");
-  const [purchasePrice, setPurchasePrice] = useInput("");
-  const [sellPrice, setSellPrice] = useInput("");
-  const [quantity, setQuantity] = useInput("");
-  const [category, setCategory] = useInput("");
+  const [name, resetName] = useInput("");
+  const [purchasePrice, resetPurchasePrice] = useInput("");
+  const [sellPrice, resetSellPrice] = useInput("");
+  const [quantity, resetQuantity] = useInput("");
+  const [category, resetCategory] = useInput("");
 
   const resetInput = () => {
-    setName();
-    setPurchasePrice();
-    setSellPrice();
-    setQuantity();
-    setCategory();
+    resetName();
+    resetPurchasePrice();
+    resetSellPrice();
+    resetQuantity();
+    resetCategory();
   };
 
   const submit = (e) => {
@@ -114,10 +114,10 @@ function AddProduct() {
   );
 }
 
-function Product({ id, name, price, quantity }) {
+function Product({ id, name, price, quantity, visibility }) {
   const { handleRemoveProduct, handleDecrement, handleIncrement } = useApp();
   return (
-    <li key={id}>
+    <li key={id} style={{ display: visibility }}>
       <button onClick={() => handleRemoveProduct(id)}>x</button>
       {name} - PHP{price.sellPrice} x{quantity}
       <button onClick={() => handleDecrement(id, quantity)}>-</button>
@@ -141,14 +141,15 @@ function ProductList() {
         <p>No products listed.</p>
       ) : (
         <>
-          {activeInventory.products.map((product) => (
-            <button
-              key={product.id}
-              onClick={() => handleCategoryFilter(product.category)}
-            >
-              {product.category}
-            </button>
-          ))}
+          <button onClick={() => handleCategoryFilter("All")}>All</button>
+          {activeInventory.products
+            .map((product) => product.category)
+            .filter((category, idx, arr) => arr.indexOf(category) === idx)
+            .map((category, idx) => (
+              <button key={idx} onClick={() => handleCategoryFilter(category)}>
+                {category}
+              </button>
+            ))}
           <ul>
             {activeInventory.products.map((product) => (
               <Product key={product.id} {...product} />
