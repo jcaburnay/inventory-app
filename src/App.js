@@ -161,6 +161,21 @@ function ProductList() {
   );
 }
 
+function Transactions() {
+  const { transactions } = useApp();
+  if (transactions.products.length === 0)
+    return <div>No transaction have been made.</div>;
+  return (
+    <ul>
+      {transactions.products.map((product) => (
+        <li key={product.id}>
+          {product.name} x{product.quantity}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function App() {
   return (
     <>
@@ -168,6 +183,7 @@ function App() {
       <InventoryList />
       <AddProduct />
       <ProductList />
+      <Transactions />
     </>
   );
 }

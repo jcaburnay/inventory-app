@@ -86,20 +86,39 @@ import { v4 } from "uuid";
 //   },
 // ];
 
+let initialTransaction = {
+  id: v4(),
+  date: new Date(),
+  products: [],
+};
+
 const AppContext = createContext();
 const useApp = () => useContext(AppContext);
 
 function AppProvider({ children }) {
   const localDataInventory = localStorage.getItem("inventories");
+  const localDataTransaction = localStorage.getItem("transactions");
   const [inventories, setInventories] = useState(
     localDataInventory ? JSON.parse(localDataInventory) : []
   );
-
+  const [transactions, setTransactions] = useState(
+    localDataTransaction
+      ? JSON.parse(localDataTransaction)
+      : {
+          id: v4(),
+          date: new Date(),
+          products: [],
+        }
+  );
   // const [inventories, setInventories] = useState(initialInventories);
 
   useEffect(() => {
     localStorage.setItem("inventories", JSON.stringify(inventories));
   }, [inventories]);
+
+  useEffect(() => {
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+  }, [transactions]);
 
   const addInventory = (name, description) => {
     const otherInventories = inventories.map((inventory) => {
@@ -158,11 +177,93 @@ function AppProvider({ children }) {
   };
 
   const handleIncrement = (id, quantity) => {
+    const selectedProduct = inventories
+      .filter((inventory) => inventory.isActive)[0]
+      .products.filter((product) => product.id === id)[0];
+    const productExist = transactions.products
+      .map((product) => product.id)
+      .includes(id);
+    if (productExist) {
+      const updatedTransaction = {
+        ...transactions,
+        products: transactions.products.map((product) => {
+          if (product.id === id) {
+            const updateQuantity = {
+              ...product,
+              quantity: product.quantity + 1,
+            };
+            return updateQuantity;
+          }
+          return product;
+        }),
+      };
+      setTransactions({
+        ...updatedTransaction,
+        products: updatedTransaction.products.filter(
+          (product) => product.quantity !== 0
+        ),
+      });
+    } else {
+      const newProduct = {
+        id: selectedProduct.id,
+        name: selectedProduct.name,
+        price: {
+          purchasePrice: selectedProduct.price.purchasePrice,
+          sellPrice: selectedProduct.price.sellPrice,
+        },
+        quantity: 1,
+      };
+      setTransactions({
+        ...transactions,
+        products: [...transactions.products, newProduct],
+      });
+    }
     quantity = quantity + 1;
     handleQuantityChange(id, quantity);
   };
 
   const handleDecrement = (id, quantity) => {
+    const selectedProduct = inventories
+      .filter((inventory) => inventory.isActive)[0]
+      .products.filter((product) => product.id === id)[0];
+    const productExist = transactions.products
+      .map((product) => product.id)
+      .includes(id);
+    if (productExist) {
+      const updatedTransaction = {
+        ...transactions,
+        products: transactions.products.map((product) => {
+          if (product.id === id) {
+            const updateQuantity = {
+              ...product,
+              quantity: product.quantity - 1,
+            };
+            return updateQuantity;
+          }
+          return product;
+        }),
+      };
+      setTransactions({
+        ...updatedTransaction,
+        products: updatedTransaction.products.filter(
+          (product) => product.quantity !== 0
+        ),
+      });
+    } else {
+      const newProduct = {
+        id: selectedProduct.id,
+        name: selectedProduct.name,
+        price: {
+          purchasePrice: selectedProduct.price.purchasePrice,
+          sellPrice: selectedProduct.price.sellPrice,
+        },
+        quantity: -1,
+      };
+      setTransactions({
+        ...transactions,
+        products: [...transactions.products, newProduct],
+      });
+    }
     if (quantity === 0) {
       return;
     }
@@ -280,6 +381,7 @@ function AppProvider({ children }) {
         handleAddProduct,
         handleRemoveProduct,
         handleCategoryFilter,
+        transactions,
       }}
     >
       {children}
