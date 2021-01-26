@@ -86,12 +86,6 @@ import { v4 } from "uuid";
 //   },
 // ];
 
-let initialTransaction = {
-  id: v4(),
-  date: new Date(),
-  products: [],
-};
-
 const AppContext = createContext();
 const useApp = () => useContext(AppContext);
 
@@ -110,6 +104,7 @@ function AppProvider({ children }) {
           products: [],
         }
   );
+
   // const [inventories, setInventories] = useState(initialInventories);
 
   useEffect(() => {
@@ -263,6 +258,9 @@ function AppProvider({ children }) {
         ...transactions,
         products: [...transactions.products, newProduct],
       });
+    }
+    if (selectedProduct.quantity === 0) {
+      setTransactions(transactions);
     }
     if (quantity === 0) {
       return;
